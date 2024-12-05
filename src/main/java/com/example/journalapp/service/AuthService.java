@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @Data
 @Slf4j
@@ -30,15 +32,23 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    public String login(AuthDto dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    public boolean validateUserCredentials(AuthDto authDto) {
+        Optional<User> userOptional = userRepository.findByEmail(authDto.getEmail());
 
-        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (passwordEncoder.matches(authDto.getPassword(), user.getPassword())) {
+                log.info("User {} logged in successfully", authDto.getEmail());
+                return true;
+            } else {
+                log.warn("Incorrect password attempt for user: {}", authDto.getEmail());
+                return false; // Incorrect password
+            }
+        } else {
+            log.warn("User not found with email: {}", authDto.getEmail());
+            return false;  // User not found
         }
-
-        return jwtTokenProvider.generateToken(user.getEmail());
     }
 }
 
