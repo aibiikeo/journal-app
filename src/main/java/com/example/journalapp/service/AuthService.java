@@ -50,5 +50,14 @@ public class AuthService {
             return false;  // User not found
         }
     }
+
+    public void updateUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));  // Hash password before saving
+        userRepository.save(user);
+    }
+
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
+    }
 }
 

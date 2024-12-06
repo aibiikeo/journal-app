@@ -16,7 +16,8 @@ public class SecurityConfig {
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/api-docs/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/password-reset/**"
     };
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -29,7 +30,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-//                .csrf(csrf -> csrf.ignoringRequestMatchers("/swagger-ui/**", "/v3/api-docs/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().authenticated()
