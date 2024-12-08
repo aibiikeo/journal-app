@@ -10,6 +10,7 @@ import com.example.journalapp.service.ImageService;
 import com.example.journalapp.service.JournalEntryService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,7 +18,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -126,11 +133,40 @@ public class JournalEntryController {
         return uploadedImages.stream().map(Image::getName).collect(Collectors.toList());
     }
     @GetMapping("/images/{fileName}")
-    public ResponseEntity<?> downloadImage(@PathVariable String fileName){
-        byte[] imageData=imageService.downloadImage(fileName);
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/png"))
-                .body(imageData);
+    public ResponseEntity<?> downloadImage(@PathVariable String fileName, @RequestParam(required = false) Integer width, @RequestParam(required = false) Integer height) {
+        try {
+            byte[] originalImageData = imageService.downloadImage(fileName);
 
+            // If resizing is requested
+            if (width != null && height != null) {
+                // Convert byte array to BufferedImage
+                InputStream in = new ByteArrayInputStream(originalImageData);
+                BufferedImage originalImage = ImageIO.read(in);
+
+                // Resize the image
+                BufferedImage resizedImage = Thumbnails.of(originalImage)
+                        .size(width, height)
+                        .asBufferedImage();
+
+                // Convert resized BufferedImage to byte array
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ImageIO.write(resizedImage, "png", out);
+                byte[] resizedImageData = out.toByteArray();
+
+                return ResponseEntity.status(HttpStatus.OK)
+                        .contentType(MediaType.valueOf("image/png"))
+                        .body(resizedImageData);
+            }
+
+            // Return original image if no resizing parameters are provided
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.valueOf("image/png"))
+                    .body(originalImageData);
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing the image.");
+        }
     }
+
 }
