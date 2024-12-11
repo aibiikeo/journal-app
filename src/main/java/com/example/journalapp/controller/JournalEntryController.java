@@ -113,6 +113,23 @@ public class JournalEntryController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Handle entry or user not found
     }
 
+    @DeleteMapping("/{userId}/{id}/{imageId}")
+    public ResponseEntity<Void> deleteImageFromJournalEntry(
+            @PathVariable Long userId,
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            @RequestHeader("Authorization") String token){
+        if (!isAuthorized(token, userId)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN); // Return 403 if unauthorized
+        }
+        boolean isDeleted = journalEntryService.deleteImageFromJournalEntry(userId, id, imageId);
+        if (isDeleted) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Return 204 if the image was successfully deleted
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Return 404 if the journal entry or image was not found
+    }
+
     private boolean isAuthorized(String token, Long userId) {
         String jwtToken = token.replace("Bearer ", "");
         if (!jwtTokenProvider.validateToken(jwtToken)) {

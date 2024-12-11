@@ -1,6 +1,7 @@
 package com.example.journalapp.service;
 
 import com.example.journalapp.dto.JournalEntryDto;
+import com.example.journalapp.entity.Image;
 import com.example.journalapp.entity.JournalEntry;
 import com.example.journalapp.entity.User;
 import com.example.journalapp.exception.ApiException;
@@ -49,7 +50,7 @@ public class JournalEntryService {
 
     public JournalEntry getJournalEntryByUserAndId(Long userId, Long id) {
         Optional<User> user = userRepository.findById(userId);
-        if (!user.isPresent()) {
+        if (user.isEmpty()) {
             throw new ApiException("User with ID " + userId + " not found.", HttpStatusCode.valueOf(404));
         }
         return journalEntryRepository.findByUserIdAndId(userId, id)
@@ -102,7 +103,7 @@ public class JournalEntryService {
 //            imageService.deleteImages(journalEntry.getImages());
             journalEntry.setImages(imageService.uploadImages(images));
         }
-        
+
         return journalEntryRepository.save(journalEntry);
     }
 
@@ -120,6 +121,30 @@ public class JournalEntryService {
         // Return false if the journal entry is not found
         return false;
     }
+
+    public boolean deleteImageFromJournalEntry(Long userId, Long id, Long imageId) {
+        // Find the journal entry by user and entry ID
+        JournalEntry journalEntry = journalEntryRepository.findByUserIdAndId(userId, id)
+                .orElseThrow(() -> new ApiException("Journal entry not found for userId: " + userId + " and entry id: " + id, HttpStatus.NOT_FOUND));
+
+        // Check if the image exists in the journal entry
+        Image imageToRemove = journalEntry.getImages().stream()
+                .filter(image -> image.getId().equals(imageId))
+                .findFirst()
+                .orElse(null);
+        if (imageToRemove == null) {
+            return false; // Image not found
+        }
+
+        // Remove the image from the journal entry
+        journalEntry.getImages().remove(imageToRemove);
+        journalEntryRepository.save(journalEntry);
+
+        // Optionally delete the image from the database or storage
+        imageRepository.deleteById(imageId);
+        return true;
+    }
+
 
     public String getEmailByUserId(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new ApiException("User not found", HttpStatusCode.valueOf(404)))
