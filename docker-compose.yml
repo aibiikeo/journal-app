@@ -1,0 +1,25 @@
+services:
+  journal-app:
+    container_name: journal-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+#    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://172.18.0.2:5432/journal-app
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: happy
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: happy
+      POSTGRES_DB: journal-app
+    ports:
+      - "5432:5432"

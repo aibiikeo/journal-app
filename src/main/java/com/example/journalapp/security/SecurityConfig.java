@@ -18,7 +18,8 @@ public class SecurityConfig {
             "/api-docs/**",
             "/v3/api-docs/**",
             "/password-reset/**",
-            "/journal-entries/images/**"
+            "/journal-entries/images/**",
+            "/"
     };
 
     private final JwtAuthFilter jwtAuthFilter;
