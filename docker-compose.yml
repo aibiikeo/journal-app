@@ -10,7 +10,7 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://172.18.0.2:5432/journal-app
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/journal-app
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: happy
 
